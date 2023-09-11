@@ -1,0 +1,11 @@
+/node_modules
+
+.env
+api_responses.json
+
+/ca_responses
+/final_responses
+/output_zip_files
+/parent_json
+/prompts_json
+/responses_json

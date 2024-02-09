@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
 import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config()
@@ -16,11 +16,10 @@ fs.writeFile(questions_response_path, "[]", 'utf8', (err) => {
   }
 });
 
-const configuration = new Configuration({
-  apiKey: process.env.API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
+const client = new OpenAIClient(
+  process.env.AZURE_OPENAI_ENDPOINT, // Your Azure OpenAI endpoint
+  new AzureKeyCredential(process.env.AZURE_API_KEY) // Your Azure OpenAI API key
+);
 
 const fileLocks = {};
 
@@ -118,21 +117,24 @@ function delay(ms) {
 
 async function getGPTResponse(message, question_prompt) {
   
-  try {
-    const response = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [message],
-      temperature: 0,
-      max_tokens: 4000,
-    });
+  const options = {
+    temperature:0,
+    max_tokens:4000
+}
+try {
+const { choices } = await client.getChatCompletions(
+  "gpt-4-latest", // Ensure the model and deployment ID is correct
+  [message],
+  options
+);
 
-    const api_response = response.data;
+const api_response = choices[0];
 
     saveResponseToFile(api_responses_path, api_response);
 
     const question_response_obj = {
       ...question_prompt,
-      prompt_response: api_response.choices[0].message.content,
+      prompt_response: api_response.message.content,
     };
 
     saveResponseToFile(
